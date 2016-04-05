@@ -133,8 +133,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
         am.cancel(pi);
 
-        //am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
-        am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000,1000,pi);
+        am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
+        //am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000,1000,pi);
 
         /*SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
         sample = prefs.getBoolean("sample", false);
@@ -149,6 +149,16 @@ public class gshockAppWidget extends AppWidgetProvider {
 
     @Override
     public void onDisabled(Context context) {
+
+
+        SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("oldHour", -1);
+        editor.putInt("oldMinute", -1);
+        editor.putInt("oldDay", -1);
+        editor.putInt("oldMonth", -1);
+        editor.commit();
+
         Intent intent = new Intent(context, Alarm.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -627,6 +637,7 @@ public class gshockAppWidget extends AppWidgetProvider {
             //gshockAppWidget.readLock.lock();
             //try {
             SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
             light = prefs.getBoolean("light", false);
             sample = prefs.getBoolean("sample", false);
             TelaAtual = prefs.getInt("TelaAtual", 0);
@@ -639,7 +650,10 @@ public class gshockAppWidget extends AppWidgetProvider {
             Al24H = prefs.getBoolean("Al24H", false);
             adjustClicked = prefs.getBoolean("adjustClicked", false);
             estadoAlarme = prefs.getInt("estadoAlarme", 0);
-
+            oldHour =  prefs.getInt("oldHour", -1);
+            oldMinute =  prefs.getInt("oldMinute", -1);
+            oldDay =  prefs.getInt("oldDay", -1);
+            oldMonth =  prefs.getInt("oldMonth", -1);
 
             //}
             //finally {
@@ -776,24 +790,28 @@ public class gshockAppWidget extends AppWidgetProvider {
 
 
                 // Horas
-                //if(Hour!=oldHour) {
+                if(Hour!=oldHour) {
                     remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0));
                     remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, String.format("%d", Hour % 10), Color.BLACK, 28, 0));
-                //    oldHour=Hour;
-                //}
+                    oldHour=Hour;
+
+                    editor.putInt("oldHour",oldHour);
+                    editor.commit();
+                }
 
 
                 // Minutos
-                //if (Minute!=oldMinute) {
-
+                if (Minute!=oldMinute) {
                     // Dois pontos
                     remoteViews.setImageViewBitmap(R.id.imageViewClock2P, gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0));
 
-
                     remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute / 10), Color.BLACK, 28, 0));
                     remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute % 10), Color.BLACK, 28, 0));
-                //    oldMinute=Minute;
-                //}
+                    oldMinute=Minute;
+
+                    editor.putInt("oldMinute", oldMinute);
+                    editor.commit();
+                }
 
                 // Segundos
                 //if (Second!=oldSecond) {
@@ -809,22 +827,28 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 // Data
                 //Mes
-                //if(Month!=oldMonth) {
+                if(Month!=oldMonth) {
                     remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0));
                     remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, String.format("%d", Month % 10), Color.BLACK, 18, 0));
-                //    oldMonth=Month;
-                //}
+                    oldMonth=Month;
+
+                    editor.putInt("oldMonth", oldMonth);
+                    editor.commit();
+                }
 
                 //Dia
-                //if (Day!=oldDay) {
+                if (Day!=oldDay) {
                     //Traco
                     remoteViews.setImageViewBitmap(R.id.imageViewTraco, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
 
 
                     remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, Day / 10 == 0 ? "" : String.format("%d", Day / 10), Color.BLACK, 18, 0));
                     remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, String.format("%d", Day % 10), Color.BLACK, 18, 0));
-                //    oldDay = Day;
-                //}
+                    oldDay = Day;
+
+                    editor.putInt("oldDay", oldDay);
+                    editor.commit();
+                }
 
                 // Dia da semana
                 remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, gshockAppWidget.getFontBitmap(context, Utility.getDayOfWeek(), Color.BLACK, 18, 0));
@@ -1086,10 +1110,10 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(thiswidget, remoteViews);
 
-            //Intent it = new Intent(context, Alarm.class);
-            //PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-            //AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            //alarmManager.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
+            Intent it = new Intent(context, Alarm.class);
+            PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            alarmManager.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
 
         }
     }
