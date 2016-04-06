@@ -5,9 +5,11 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -15,6 +17,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.util.TypedValue;
@@ -79,45 +82,6 @@ public class gshockAppWidget extends AppWidgetProvider {
     private static int Month;
 
 
-    private static int oldHour=-1;
-    private static int oldMinute=-1;
-    private static int oldSecond=-1;
-    private static int oldDay=-1;
-    private static int oldMonth=-1;
-
-    //public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    //public static Lock readLock = readWriteLock.readLock();
-    //public static Lock writeLock = readWriteLock.writeLock();
-
-
-    /*public static void clearApplicationData(Context context)
-    {
-        File cache = context.getCacheDir();
-        File appDir = new File(cache.getParent());
-        if (appDir.exists()) {
-            String[] children = appDir.list();
-            for (String s : children) {
-                if (!s.equals("lib") && !s.equals("shared_prefs")) {
-                    deleteDir(new File(appDir, s));Log.i("LEO", "**************** File /data/data/APP_PACKAGE/" + s + " DELETED *******************");
-                }
-            }
-        }
-    }
-
-    public static boolean deleteDir(File dir)
-    {
-        if (dir != null && dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
-                if (!success) {
-                    return false;
-                }
-            }
-        }
-        return dir.delete();
-    }*/
-
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
        updateScreen(context,appWidgetManager,appWidgetIds);
@@ -130,35 +94,12 @@ public class gshockAppWidget extends AppWidgetProvider {
         AlarmManager am=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, Alarm.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
-
-        am.cancel(pi);
-
-        am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
-        //am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000,1000,pi);
-
-        /*SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
-        sample = prefs.getBoolean("sample", false);
-
-        if (!sample) {
-            am.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,pi);
-        }
-        else {
-            am.set(AlarmManager.RTC, System.currentTimeMillis() + 5000, pi);
-        }*/
+        //am.cancel(pi);
+        am.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, pi);
     }
 
     @Override
     public void onDisabled(Context context) {
-
-
-        SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("oldHour", -1);
-        editor.putInt("oldMinute", -1);
-        editor.putInt("oldDay", -1);
-        editor.putInt("oldMonth", -1);
-        editor.commit();
-
         Intent intent = new Intent(context, Alarm.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -215,42 +156,20 @@ public class gshockAppWidget extends AppWidgetProvider {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
             mp.start();
 
-            //SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
-            //readLock.lock();
-            //try {
-                TelaAtual = prefs.getInt("TelaAtual", 0);
-                light = prefs.getBoolean("light", false);
-            //}
-            //finally {
-            //    readLock.unlock();
-            //}
+            TelaAtual = prefs.getInt("TelaAtual", 0);
+            light = prefs.getBoolean("light", false);
 
             if (TelaAtual==0) {
 
                 if (light == true) {
-
                     views.setImageViewResource(R.id.imageView, R.drawable.gshock);
 
-                    //SharedPreferences.Editor editor = prefs.edit();
-                    //writeLock.lock();
-                    //try {
-                        editor.putBoolean("light", false);
-                        editor.commit();
-                    //}
-                    //finally {
-                    //    writeLock.unlock();
-                    //}
-                } else {
-                    //SharedPreferences.Editor editor = prefs.edit();
-                    //writeLock.lock();
-                    ///try {
-                        editor.putBoolean("light", true);
-                        editor.commit();
-                    //}
-                    //finally {
-                    //    writeLock.unlock();
-                    //}
-
+                    editor.putBoolean("light", false);
+                    editor.commit();
+                }
+                else {
+                    editor.putBoolean("light", true);
+                    editor.commit();
                     views.setImageViewResource(R.id.imageView, R.drawable.gshock_light);
                 }
             }
@@ -261,16 +180,9 @@ public class gshockAppWidget extends AppWidgetProvider {
                 estadoBip++;
                 if (estadoBip>3) estadoBip=0;
 
-                //SharedPreferences.Editor editor = prefs.edit();
-                //writeLock.lock();
-                //try {
+                editor.putInt("estadoBip", estadoBip);
+                editor.commit();
 
-                    editor.putInt("estadoBip", estadoBip);
-                    editor.commit();
-                //}
-                //finally {
-                //    writeLock.unlock();
-               // }
 
                 if (estadoBip==0) { // Ambos ligados
                     views.setViewVisibility(R.id.imageViewBip1, View.VISIBLE);
@@ -289,8 +201,6 @@ public class gshockAppWidget extends AppWidgetProvider {
                     views.setViewVisibility(R.id.imageViewBip2, View.VISIBLE);
                 }
             }
-
-            //views.setViewVisibility(R.id.buttonLight, View.INVISIBLE);
         }
 
         else if (BUTTON_MODE.equals(intent.getAction())) {
@@ -298,62 +208,24 @@ public class gshockAppWidget extends AppWidgetProvider {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
             mp.start();
 
-            //SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
+            TelaAtual = prefs.getInt("TelaAtual", 0);
+            sample = prefs.getBoolean("sample", false);
+            adjustClicked = prefs.getBoolean("adjustClicked", false);
+            estadoAlarme = prefs.getInt("estadoAlarme", 0);
 
-            //readLock.lock();
-            //try {
-                TelaAtual = prefs.getInt("TelaAtual", 0);
-                sample = prefs.getBoolean("sample", false);
-                adjustClicked = prefs.getBoolean("adjustClicked", false);
-                estadoAlarme = prefs.getInt("estadoAlarme", 0);
-            //}
-            //finally {
-            //    readLock.unlock();
-            //}
 
             if (!adjustClicked) {
                 TelaAtual++;
 
                 if (TelaAtual > numTelas - 1) TelaAtual = 0;
 
-                //SharedPreferences.Editor editor = prefs.edit();
-                //writeLock.lock();
-                //try {
-                    editor.putInt("TelaAtual", TelaAtual);
-                    editor.commit();
-                //}
-                //finally {
-                //    writeLock.unlock();
-                //}
-
-                /*Intent it = new Intent(context, Alarm.class);
-                PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-                AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-                alarmManager.cancel(pi);
-
-                alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-
-                alarmManager.cancel(pi);
-
-                //Log.e("LEO", "sample = " + sample);
-
-                if (!sample)
-                    alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-                else
-                    alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 5000, pi);*/
+                editor.putInt("TelaAtual", TelaAtual);
+                editor.commit();
             }
             else{
                 if (TelaAtual==0) { // Tela de alarme
-
-                    //SharedPreferences.Editor editor = prefs.edit();
-                    //writeLock.lock();
-                    //try {
-                        editor.putBoolean("adjustClicked", adjustClicked = false);
-                        editor.commit();
-                    //}
-                    //finally {
-                    //    writeLock.unlock();
-                    //}
+                    editor.putBoolean("adjustClicked", adjustClicked = false);
+                    editor.commit();
                 }
 
 
@@ -362,19 +234,11 @@ public class gshockAppWidget extends AppWidgetProvider {
                     if (estadoAlarme>3)
                         estadoAlarme = 0;
 
-                    //SharedPreferences.Editor editor = prefs.edit();
-                    //writeLock.lock();
-                    //try {
-                        editor.putInt("estadoAlarme", estadoAlarme);
-                        editor.commit();
-                    //}
-                    //finally {
-                    //    writeLock.unlock();
-                    //}
+                    editor.putInt("estadoAlarme", estadoAlarme);
+                    editor.commit();
+
                 }
             }
-
-            //views.setViewVisibility(R.id.buttonMode, View.INVISIBLE);
         }
 
         else if (BUTTON_ADJUST.equals(intent.getAction())) {
@@ -382,87 +246,35 @@ public class gshockAppWidget extends AppWidgetProvider {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
             mp.start();
 
-            Intent it = new Intent(context, Alarm.class);
-            PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            alarmManager.cancel(pi);
-
-            //SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
-
-            //readLock.lock();
-            //try {
-                TelaAtual = prefs.getInt("TelaAtual", 0);
-                sample = prefs.getBoolean("sample", false);
-                adjustClicked = prefs.getBoolean("adjustClicked", false);
-            //}
-            //finally {
-            //    readLock.unlock();
-            //}
-
+            TelaAtual = prefs.getInt("TelaAtual", 0);
+            sample = prefs.getBoolean("sample", false);
+            adjustClicked = prefs.getBoolean("adjustClicked", false);
 
             if(!adjustClicked){
                 if (TelaAtual != 0) {
                     adjustClicked = true;
-                    //alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
                 }
                 else{
                     adjustClicked=false;
-                    /*if (!sample)
-                        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-                    else
-                        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 5000, pi);*/
-
                 }
             }
             else{
                 adjustClicked=false;
                 estadoAlarme = 0;
-
-                //SharedPreferences.Editor editor = prefs.edit();
-                //writeLock.lock();
-                //try {
-                    editor.putInt("estadoAlarme", estadoAlarme);
-                    editor.commit();
-                //}
-                //finally {
-                //    writeLock.unlock();
-                //}
-
-                /*if (!sample)
-                    alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-                else
-                    alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 5000, pi);*/
-
             }
 
-            //SharedPreferences.Editor editor = prefs.edit();
-            //writeLock.lock();
-            //try {
-                editor.putBoolean("adjustClicked", adjustClicked);
-                editor.commit();
-            //}
-            //finally {
-            ///    writeLock.unlock();
-            //}
+            editor.putBoolean("adjustClicked", adjustClicked);
+            editor.commit();
 
-            //views.setViewVisibility(R.id.buttonAdjust, View.INVISIBLE);
         }
         else if (BUTTON_REM.equals(intent.getAction())) {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
             mp.start();
 
-            //SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
 
-            //readLock.lock();
-            //try {
-
-                TelaAtual = prefs.getInt("TelaAtual", 0);
-                sample = prefs.getBoolean("sample", false);
-                adjustClicked = prefs.getBoolean("adjustClicked", false);
-            //}
-            //finally {
-            ///    readLock.unlock();
-            //}
+            TelaAtual = prefs.getInt("TelaAtual", 0);
+            sample = prefs.getBoolean("sample", false);
+            adjustClicked = prefs.getBoolean("adjustClicked", false);
 
             if (adjustClicked){
                 if (TelaAtual == 1) { // Tela de alarme
@@ -505,100 +317,51 @@ public class gshockAppWidget extends AppWidgetProvider {
                             }
                         }
 
-                        //SharedPreferences.Editor editor = prefs.edit();
-                        //writeLock.lock();
-                        //try {
 
                             editor.putInt("AlHour", AlHour);
                             editor.putBoolean("AlPM", AlPM);
                             editor.putBoolean("Al24H", Al24H);
-                            editor.commit();
-                        //}
-                        //finally {
-                        //    writeLock.unlock();
-                        //}
-                    } else if (estadoAlarme == 1) {
+
+                    }
+                    else if (estadoAlarme == 1) {
                         AlMin++;
                         if (AlMin > 59) AlMin = 0;
 
-                        //SharedPreferences.Editor editor = prefs.edit();
-                        //writeLock.lock();
-                        //try {
-                            editor.putInt("AlMin", AlMin);
-                            editor.commit();
-                        //}
-                        //finally {
-                        //    writeLock.unlock();
-                        //}
-                    } else if (estadoAlarme == 2) {
+                        editor.putInt("AlMin", AlMin);
+                        editor.commit();
+
+                    }
+                    else if (estadoAlarme == 2) {
                         AlMonth++;
                         if (AlMonth > 12) AlMonth = 0;
 
-                        //SharedPreferences.Editor editor = prefs.edit();
-                        //writeLock.lock();
-                        //try {
-                            editor.putInt("AlMonth", AlMonth);
-                            editor.commit();
-                        //}
-                        //finally {
-                        //    writeLock.unlock();
-                        //}
-                    } else if (estadoAlarme == 3) {
+                        editor.putInt("AlMonth", AlMonth);
+                        editor.commit();
+
+                    }
+                    else if (estadoAlarme == 3) {
                         Alday++;
                         if ((AlMonth % 2) == 0) {
                             if (AlMonth == 2) {
                                 Calendar c = Calendar.getInstance();
                                 int year = c.get(Calendar.YEAR);
-                                //Log.e("LEO", "Year = " + year);
                                 if ((year % 4) == 0) {
-                                    //Log.e("LEO", "Year = " + year);
                                     if (Alday > 29) Alday = 0;
                                 } else if (Alday > 28) Alday = 0;
                             } else if (Alday > 30) Alday = 0;
                         } else if (Alday > 31) Alday = 0;
 
-                        //SharedPreferences.Editor editor = prefs.edit();
-                        //writeLock.lock();
-                        //try {
-                            editor.putInt("Alday", Alday);
-                            editor.commit();
-                        //}
-                        //finally {
-                        //    writeLock.unlock();
-                        //}
+                        editor.putInt("Alday", Alday);
+                        editor.commit();
                     }
                 }
             }
             else{
                 if (TelaAtual == 0){ // Nesse caso vai mudar para 5 segundos
-                    /*Intent it = new Intent(context, Alarm.class);
-                    PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-                    AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-                    alarmManager.cancel(pi);*/
-
-                    //SharedPreferences.Editor editor = prefs.edit();
-                    //writeLock.lock();
-                    //try {
-                        //if (sample) sample = false;
-                        //else sample = true;
-                        //editor.putBoolean("sample", sample);
-                        //editor.commit();
-                    //}
-                    //finally {
-                    //    writeLock.unlock();
-                    //}
-                    //Log.e("LEO", "sample = " + sample);
-
-                    /*if (!sample)
-                        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-                    else
-                        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis()+1000, 5000, pi);*/
-
                 }
 
             }
 
-            //views.setViewVisibility(R.id.buttonRem, View.INVISIBLE);
 
         }
         else if (USER_PRESENT.equals(intent.getAction())){
@@ -613,13 +376,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
 
 
-
-
-
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
     static void updateScreen (Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds){
@@ -634,8 +391,7 @@ public class gshockAppWidget extends AppWidgetProvider {
         for (int widgetId : appWidgetIds) {
 
             // Le dados persistentes
-            //gshockAppWidget.readLock.lock();
-            //try {
+
             SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
             light = prefs.getBoolean("light", false);
@@ -650,15 +406,7 @@ public class gshockAppWidget extends AppWidgetProvider {
             Al24H = prefs.getBoolean("Al24H", false);
             adjustClicked = prefs.getBoolean("adjustClicked", false);
             estadoAlarme = prefs.getInt("estadoAlarme", 0);
-            oldHour =  prefs.getInt("oldHour", -1);
-            oldMinute =  prefs.getInt("oldMinute", -1);
-            oldDay =  prefs.getInt("oldDay", -1);
-            oldMonth =  prefs.getInt("oldMonth", -1);
 
-            //}
-            //finally {
-            //    gshockAppWidget.readLock.unlock();
-            //}
 
             // Le data e hora
             Calendar c = Calendar.getInstance();
@@ -683,9 +431,6 @@ public class gshockAppWidget extends AppWidgetProvider {
                 if (Hour > 12) Hour -= 12;
                 else if (Hour == 0) Hour = 12;
             }
-
-            //pisca++;
-            //if (pisca > 100) pisca = 0;
 
 
             ////////////////////////////////////////////////////////////////////////////////////////////
@@ -741,24 +486,15 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
 
                 if (startBip) {
-                    //Intent it = new Intent(context, Alarm.class);
-                    //PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-                    //AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
                     if (coBip == 0) {
-                        //alarmManager.cancel(pi);
-                        //alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
+
                     }
                     if (coBip < 20) {
                         final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
                         mp.start();
                     } else if (coBip > 100) {
                         startBip = false;
-                        //alarmManager.cancel(pi);
-                        /*if (!sample)
-                            alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 1000, pi);
-                        else
-                            alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, 5000, pi);*/
                     }
                     coBip++;
                 } else {
@@ -790,65 +526,46 @@ public class gshockAppWidget extends AppWidgetProvider {
 
 
                 // Horas
-                if(Hour!=oldHour) {
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, String.format("%d", Hour % 10), Color.BLACK, 28, 0));
-                    oldHour=Hour;
-
-                    editor.putInt("oldHour",oldHour);
-                    editor.commit();
-                }
+                remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0));
+                remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, String.format("%d", Hour % 10), Color.BLACK, 28, 0));
 
 
                 // Minutos
-                if (Minute!=oldMinute) {
-                    // Dois pontos
-                    remoteViews.setImageViewBitmap(R.id.imageViewClock2P, gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0));
 
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute / 10), Color.BLACK, 28, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute % 10), Color.BLACK, 28, 0));
-                    oldMinute=Minute;
+                // Dois pontos
+                remoteViews.setImageViewBitmap(R.id.imageViewClock2P, gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0));
 
-                    editor.putInt("oldMinute", oldMinute);
-                    editor.commit();
-                }
+                remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute / 10), Color.BLACK, 28, 0));
+                remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute % 10), Color.BLACK, 28, 0));
+
 
                 // Segundos
-                //if (Second!=oldSecond) {
-                    if (!sample) {
-                        remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, String.format("%d", Second / 10), Color.BLACK, 20, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, String.format("%d", Second % 10), Color.BLACK, 20, 0));
-                    } else {
-                        remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
-                    }
-                    //oldSecond = Second;
-                //}
+
+                if (!sample) {
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, String.format("%d", Second / 10), Color.BLACK, 20, 0));
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, String.format("%d", Second % 10), Color.BLACK, 20, 0));
+                } else {
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
+                }
+
 
                 // Data
                 //Mes
-                if(Month!=oldMonth) {
-                    remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, String.format("%d", Month % 10), Color.BLACK, 18, 0));
-                    oldMonth=Month;
 
-                    editor.putInt("oldMonth", oldMonth);
-                    editor.commit();
-                }
+                remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0));
+                remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, String.format("%d", Month % 10), Color.BLACK, 18, 0));
+
 
                 //Dia
-                if (Day!=oldDay) {
-                    //Traco
-                    remoteViews.setImageViewBitmap(R.id.imageViewTraco, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
+
+                //Traco
+                remoteViews.setImageViewBitmap(R.id.imageViewTraco, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
 
 
-                    remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, Day / 10 == 0 ? "" : String.format("%d", Day / 10), Color.BLACK, 18, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, String.format("%d", Day % 10), Color.BLACK, 18, 0));
-                    oldDay = Day;
+                remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, Day / 10 == 0 ? "" : String.format("%d", Day / 10), Color.BLACK, 18, 0));
+                remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, String.format("%d", Day % 10), Color.BLACK, 18, 0));
 
-                    editor.putInt("oldDay", oldDay);
-                    editor.commit();
-                }
 
                 // Dia da semana
                 remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, gshockAppWidget.getFontBitmap(context, Utility.getDayOfWeek(), Color.BLACK, 18, 0));
@@ -1091,8 +808,6 @@ public class gshockAppWidget extends AppWidgetProvider {
                 remoteViews.setImageViewResource(R.id.imageView, R.drawable.gshock_light);
             }
 
-
-
             // Inicia imagem dos alarmes
             if (estadoBip == 0) { // Ambos ligados
                 remoteViews.setViewVisibility(R.id.imageViewBip1, View.VISIBLE);
@@ -1113,8 +828,7 @@ public class gshockAppWidget extends AppWidgetProvider {
             Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            alarmManager.setExact(AlarmManager.RTC, System.currentTimeMillis() + 1000, pi);
-
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, pi);
         }
     }
 }
