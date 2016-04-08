@@ -81,6 +81,7 @@ public class gshockAppWidget extends AppWidgetProvider {
     private static int Day;
     private static int Month;
 
+    private static int oldSecond=0;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -88,14 +89,45 @@ public class gshockAppWidget extends AppWidgetProvider {
     }
 
     @Override
-    public void onEnabled(Context context) {
+    public void onEnabled(final Context context) {
         super.onEnabled(context);
 
         AlarmManager am=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, Alarm.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
-        //am.cancel(pi);
-        am.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, pi);
+        am.cancel(pi);
+        //am.setExact(AlarmManager.RTC, System.currentTimeMillis() + 500, pi);
+        am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500,500, pi);
+
+
+        /*Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while(true) {
+                        sleep(5000);
+                        Log.i("LEO","Rodando");
+                        if (oldSecond != Second){
+                            Log.i("LEO","Passou");
+                           RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.gshock_app_widget);
+                            ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
+                            AppWidgetManager manager = AppWidgetManager.getInstance(context);
+
+                            manager.updateAppWidget(thiswidget, views);
+
+                            int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
+                            updateScreen(context,manager,appWidgetIds);
+                            oldSecond = Second;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    while(true) Log.i("LEO","Erro thread");
+                }
+            }
+        };
+
+        thread.start();*/
     }
 
     @Override
@@ -143,6 +175,8 @@ public class gshockAppWidget extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
+
+        Log.i("LEO","EVENTO");
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.gshock_app_widget);
         ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
@@ -318,10 +352,10 @@ public class gshockAppWidget extends AppWidgetProvider {
                         }
 
 
-                            editor.putInt("AlHour", AlHour);
-                            editor.putBoolean("AlPM", AlPM);
-                            editor.putBoolean("Al24H", Al24H);
-
+                        editor.putInt("AlHour", AlHour);
+                        editor.putBoolean("AlPM", AlPM);
+                        editor.putBoolean("Al24H", Al24H);
+                        editor.commit();
                     }
                     else if (estadoAlarme == 1) {
                         AlMin++;
@@ -380,7 +414,6 @@ public class gshockAppWidget extends AppWidgetProvider {
 
 
     static void updateScreen (Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds){
-
         ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
         //You can do the processing here update the widget/remote views.
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
@@ -415,6 +448,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             Minute = c.get(Calendar.MINUTE);
             Second = c.get(Calendar.SECOND);
+            oldSecond = Second;
             Day = c.get(Calendar.DAY_OF_MONTH);
             Month = c.get(Calendar.MONTH) + 1;
 
@@ -490,9 +524,11 @@ public class gshockAppWidget extends AppWidgetProvider {
                     if (coBip == 0) {
 
                     }
-                    if (coBip < 20) {
-                        final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
-                        mp.start();
+                    if (coBip < 40) {
+                        if ((coBip%2)==0) {
+                            final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
+                            mp.start();
+                        }
                     } else if (coBip > 100) {
                         startBip = false;
                     }
@@ -825,10 +861,13 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(thiswidget, remoteViews);
 
-            Intent it = new Intent(context, Alarm.class);
+            Log.i("LEO", "Update Screen");
+
+
+            /*Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, pi);
+            alarmManager.setExact(AlarmManager.RTC, System.currentTimeMillis() + 500, pi);*/
         }
     }
 }
