@@ -23,6 +23,8 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
+
+import java.io.File;
 import java.util.Calendar;
 
 
@@ -54,8 +56,8 @@ public class gshockAppWidget extends AppWidgetProvider {
     public static String BUTTON_REM     = "android.appwidget.action.buttonRem";
     public static String BUTTON_ADJUST  = "android.appwidget.action.buttonAdjust";
     public static String BUTTON_MODE    = "android.appwidget.action.buttonMode";
-
     public static String USER_PRESENT   = "android.intent.action.USER_PRESENT";
+    public static String SCREEN_ON      = "android.intent.action.SCREEN_ON";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,14 +85,50 @@ public class gshockAppWidget extends AppWidgetProvider {
 
     private static int oldSecond=0;
 
+
+    static public void clearApplicationData(Context context)
+    {
+        File cache = context.getCacheDir();
+        File appDir = new File(cache.getParent());
+        if (appDir.exists()) {
+            String[] children = appDir.list();
+            for (String s : children) {
+                if (!s.equals("lib") && !s.equals("shared_prefs")) {
+                    deleteDir(new File(appDir, s));
+                    //Log.i("LEO", "**************** File /data/data/APP_PACKAGE/" + s + " DELETED *******************");
+                }
+            }
+        }
+    }
+
+    public static boolean deleteDir(File dir)
+    {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+        return dir.delete();
+    }
+
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
        updateScreen(context,appWidgetManager,appWidgetIds);
     }
 
     @Override
-    public void onEnabled(final Context context) {
+    public void onEnabled(Context context) {
         super.onEnabled(context);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(SCREEN_ON);
+        BroadcastReceiver mReceiver = new ScreenON();
+        context.getApplicationContext().registerReceiver(mReceiver, filter);
 
         AlarmManager am=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, Alarm.class);
@@ -400,6 +438,7 @@ public class gshockAppWidget extends AppWidgetProvider {
         }
         else if (USER_PRESENT.equals(intent.getAction())){
             Log.i("LEO","User present");
+            clearApplicationData(context);
         }
 
         manager.updateAppWidget(thiswidget, views);
