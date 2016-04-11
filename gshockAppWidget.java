@@ -83,8 +83,11 @@ public class gshockAppWidget extends AppWidgetProvider {
     private static int Day;
     private static int Month;
 
-    private static int oldSecond=0;
-
+    public static int oldHour=-1;
+    public static int oldMinute=-1;
+    public static int oldDay=-1;
+    public static int oldMonth=-1;
+    public static String oldWeekDay="ER";
 
     static public void clearApplicationData(Context context)
     {
@@ -214,7 +217,11 @@ public class gshockAppWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
 
-        Log.i("LEO","EVENTO");
+        oldMinute=-1;
+        oldMonth=-1;
+        oldDay=-1;
+        oldWeekDay="ER";
+        oldHour=-1;
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.gshock_app_widget);
         ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
@@ -323,8 +330,11 @@ public class gshockAppWidget extends AppWidgetProvider {
             adjustClicked = prefs.getBoolean("adjustClicked", false);
 
             if(!adjustClicked){
-                if (TelaAtual != 0) {
+                if (TelaAtual == 1) {
                     adjustClicked = true;
+
+                    editor.putInt("estadoAlarme", 0);
+                    editor.commit();
                 }
                 else{
                     adjustClicked=false;
@@ -342,7 +352,6 @@ public class gshockAppWidget extends AppWidgetProvider {
         else if (BUTTON_REM.equals(intent.getAction())) {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
             mp.start();
-
 
             TelaAtual = prefs.getInt("TelaAtual", 0);
             sample = prefs.getBoolean("sample", false);
@@ -433,19 +442,31 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
 
             }
-
-
         }
         else if (USER_PRESENT.equals(intent.getAction())){
             Log.i("LEO","User present");
+
+            Intent it = new Intent(context, Alarm.class);
+            PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
+            AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            am.cancel(pi);
+
             clearApplicationData(context);
             System.gc();
+
+            am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
         }
 
         manager.updateAppWidget(thiswidget, views);
 
-        int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
-        updateScreen(context,manager,appWidgetIds);
+        thiswidget = null;
+        views = null;
+        prefs = null;
+        editor = null;
+        manager = null;
+
+        //int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
+        //updateScreen(context,manager,appWidgetIds);
     }
 
 
@@ -453,6 +474,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
 
     static void updateScreen (Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds){
+
+        Bitmap imagem;
         ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
         //You can do the processing here update the widget/remote views.
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
@@ -465,7 +488,6 @@ public class gshockAppWidget extends AppWidgetProvider {
             // Le dados persistentes
 
             SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
             light = prefs.getBoolean("light", false);
             sample = prefs.getBoolean("sample", false);
             TelaAtual = prefs.getInt("TelaAtual", 0);
@@ -487,7 +509,6 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             Minute = c.get(Calendar.MINUTE);
             Second = c.get(Calendar.SECOND);
-            oldSecond = Second;
             Day = c.get(Calendar.DAY_OF_MONTH);
             Month = c.get(Calendar.MONTH) + 1;
 
@@ -577,74 +598,133 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
             }
 
-
-            //remoteViews.setTextViewText(R.id.textView,"adj = " + adjustClicked + " pisca = " + pisca + "\n" + "coBip=" + coBip);
-
-
             // REM
-            remoteViews.setImageViewBitmap(R.id.imageViewREM, gshockAppWidget.getFontBitmap(context, "REM", Color.BLACK, 4, 1));
+            imagem = gshockAppWidget.getFontBitmap(context, "REM", Color.BLACK, 4, 1);
+            remoteViews.setImageViewBitmap(R.id.imageViewREM, imagem);
+            imagem = null;
 
             if (TelaAtual == 0) {
                 // Relogio
                 if (is24H) {
                     remoteViews.setViewVisibility(R.id.imageView24H, View.VISIBLE);
                     remoteViews.setViewVisibility(R.id.imageViewAMPM, View.INVISIBLE);
-                    remoteViews.setImageViewBitmap(R.id.imageView24H, gshockAppWidget.getFontBitmap(context, "24H", Color.BLACK, 7, 1));
+                    imagem = gshockAppWidget.getFontBitmap(context, "24H", Color.BLACK, 7, 1);
+                    remoteViews.setImageViewBitmap(R.id.imageView24H, imagem);
+                    imagem = null;
                 } else {
                     remoteViews.setViewVisibility(R.id.imageViewAMPM, View.VISIBLE);
                     remoteViews.setViewVisibility(R.id.imageView24H, View.INVISIBLE);
-                    if (isPM)
-                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, gshockAppWidget.getFontBitmap(context, "PM", Color.BLACK, 6, 1));
-                    else
-                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, gshockAppWidget.getFontBitmap(context, "AM", Color.BLACK, 6, 1));
+                    if (isPM) {
+                        imagem = gshockAppWidget.getFontBitmap(context, "PM", Color.BLACK, 6, 1);
+                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, imagem);
+                        imagem = null;
+                    }
+                    else {
+                        imagem = gshockAppWidget.getFontBitmap(context, "AM", Color.BLACK, 6, 1);
+                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, imagem);
+                        imagem = null;
+                    }
                 }
 
-
+                //////////////////////////////////////////////////////////////////////////////////////////
                 // Horas
-                remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0));
-                remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, String.format("%d", Hour % 10), Color.BLACK, 28, 0));
+                if (oldHour!=Hour) {
+                    imagem = gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
+                    imagem = null;
 
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Hour % 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockH2, imagem);
+                    imagem = null;
+                    oldHour=Hour;
+                }
+                //////////////////////////////////////////////////////////////////////////////////////////
 
+                /////////////////////////////////////////////////////////////////////////////////////////
                 // Minutos
+                if(oldMinute!=Minute) {
+                    // Dois pontos
+                    imagem = gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClock2P, imagem);
+                    imagem = null;
 
-                // Dois pontos
-                remoteViews.setImageViewBitmap(R.id.imageViewClock2P, gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Minute / 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
+                    imagem = null;
 
-                remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute / 10), Color.BLACK, 28, 0));
-                remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, String.format("%d", Minute % 10), Color.BLACK, 28, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Minute % 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockM2, imagem);
+                    imagem = null;
 
+                    oldMinute = Minute;
+                }
+                ////////////////////////////////////////////////////////////////////////////////////////////
 
                 // Segundos
-
                 if (!sample) {
-                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, String.format("%d", Second / 10), Color.BLACK, 20, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, String.format("%d", Second % 10), Color.BLACK, 20, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Second / 10), Color.BLACK, 20, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, imagem);
+                    imagem = null;
+
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Second % 10), Color.BLACK, 20, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
+                    imagem = null;
                 } else {
-                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec1, imagem);
+                    imagem = null;
+
+                    imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
+                    imagem = null;
                 }
 
-
+                /////////////////////////////////////////////////////////////////////////////////////
                 // Data
-                //Mes
+                if (oldMonth!=Month) {
+                    //Mes
+                    imagem = gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
+                    imagem = null;
 
-                remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0));
-                remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, String.format("%d", Month % 10), Color.BLACK, 18, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Month % 10), Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewMes2, imagem);
+                    imagem = null;
+                    oldMonth = Month;
+                }
+                //////////////////////////////////////////////////////////////////////////////////////
 
 
+                //////////////////////////////////////////////////////////////////////////////////////
                 //Dia
+                if (oldDay!=Day) {
+                    //Traco
+                    imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewTraco, imagem);
+                    imagem = null;
 
-                //Traco
-                remoteViews.setImageViewBitmap(R.id.imageViewTraco, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, Day / 10 == 0 ? "" : String.format("%d", Day / 10), Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewDia1, imagem);
+                    imagem = null;
+
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Day % 10), Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewDia2, imagem);
+                    imagem = null;
+                    oldDay = Day;
+                }
+                ////////////////////////////////////////////////////////////////////////////////////
 
 
-                remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, Day / 10 == 0 ? "" : String.format("%d", Day / 10), Color.BLACK, 18, 0));
-                remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, String.format("%d", Day % 10), Color.BLACK, 18, 0));
-
-
+                ///////////////////////////////////////////////////////////////////////////////////////
                 // Dia da semana
-                remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, gshockAppWidget.getFontBitmap(context, Utility.getDayOfWeek(), Color.BLACK, 18, 0));
-
+                String str = Utility.getDayOfWeek();
+                if(!oldWeekDay.equals(str)) {
+                    imagem = gshockAppWidget.getFontBitmap(context, str, Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, imagem);
+                    imagem = null;
+                    oldWeekDay = str;
+                }
+                //////////////////////////////////////////////////////////////////////////////////////
             }
 
 
@@ -655,21 +735,29 @@ public class gshockAppWidget extends AppWidgetProvider {
                 int localHour = AlHour;
 
                 // AL
-                remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, gshockAppWidget.getFontBitmap(context, "AL", Color.BLACK, 18, 0));
+                imagem = gshockAppWidget.getFontBitmap(context, "AL", Color.BLACK, 18, 0);
+                remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, imagem);
+                imagem = null;
 
                 // Campo de alarme
                 if (is24H) {
                     remoteViews.setViewVisibility(R.id.imageView24H, View.VISIBLE);
                     remoteViews.setViewVisibility(R.id.imageViewAMPM, View.INVISIBLE);
-                    remoteViews.setImageViewBitmap(R.id.imageView24H, gshockAppWidget.getFontBitmap(context, "24H", Color.BLACK, 7, 1));
+                    imagem = gshockAppWidget.getFontBitmap(context, "24H", Color.BLACK, 7, 1);
+                    remoteViews.setImageViewBitmap(R.id.imageView24H, imagem);
+                    imagem = null;
                 } else {
                     remoteViews.setViewVisibility(R.id.imageViewAMPM, View.VISIBLE);
                     remoteViews.setViewVisibility(R.id.imageView24H, View.INVISIBLE);
 
                     if ((AlPM) || (Al24H) && ((AlHour > 12) || AlHour == 0)) {
-                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, gshockAppWidget.getFontBitmap(context, "PM", Color.BLACK, 6, 1));
+                        imagem = gshockAppWidget.getFontBitmap(context, "PM", Color.BLACK, 6, 1);
+                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, imagem);
+                        imagem = null;
                     } else {
-                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, gshockAppWidget.getFontBitmap(context, "AM", Color.BLACK, 6, 1));
+                        imagem = gshockAppWidget.getFontBitmap(context, "AM", Color.BLACK, 6, 1);
+                        remoteViews.setImageViewBitmap(R.id.imageViewAMPM, imagem);
+                        imagem = null;
                     }
                 }
 
@@ -697,61 +785,119 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
 
                     // Horas
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, localHour / 10 == 0 ? "" : String.format("%d", localHour / 10), Color.BLACK, 28, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, String.format("%d", localHour % 10), Color.BLACK, 28, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, localHour / 10 == 0 ? "" : String.format("%d", localHour / 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
+                    imagem = null;
+
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", localHour % 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockH2, imagem);
+                    imagem = null;
 
                     // Dois pontos
-                    remoteViews.setImageViewBitmap(R.id.imageViewClock2P, gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClock2P, imagem);
+                    imagem = null;
 
                     // Minutos
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, String.format("%d", AlMin / 10), Color.BLACK, 28, 0));
-                    remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, String.format("%d", AlMin % 10), Color.BLACK, 28, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", AlMin / 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
+                    imagem = null;
+
+                    imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", AlMin % 10), Color.BLACK, 28, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewClockM2, imagem);
+                    imagem = null;
 
 
                     // Data
                     //Mes
                     if (AlMonth == 0) {
-                        remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
+                        imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
+                        imagem = null;
+
+                        imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewMes2, imagem);
+                        imagem = null;
                     } else {
-                        remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, AlMonth / 10 == 0 ? "" : String.format("%d", AlMonth / 10), Color.BLACK, 18, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, String.format("%d", AlMonth % 10), Color.BLACK, 18, 0));
+                        imagem = gshockAppWidget.getFontBitmap(context, AlMonth / 10 == 0 ? "" : String.format("%d", AlMonth / 10), Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
+                        imagem = null;
+
+                        imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", AlMonth % 10), Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewMes2, imagem);
+                        imagem = null;
                     }
                     //Traco
-                    remoteViews.setImageViewBitmap(R.id.imageViewTraco, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
+                    imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
+                    remoteViews.setImageViewBitmap(R.id.imageViewTraco, imagem);
+                    imagem = null;
+
                     //Dia
                     if (Alday == 0) {
-                        remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0));
+                        imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewDia1, imagem);
+                        imagem = null;
+
+                        imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewDia2, imagem);
+                        imagem = null;
                     } else {
-                        remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, Alday / 10 == 0 ? "" : String.format("%d", Alday / 10), Color.BLACK, 18, 0));
-                        remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, String.format("%d", Alday % 10), Color.BLACK, 18, 0));
+                        imagem = gshockAppWidget.getFontBitmap(context, Alday / 10 == 0 ? "" : String.format("%d", Alday / 10), Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewDia1, imagem);
+                        imagem = null;
+
+                        imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Alday % 10), Color.BLACK, 18, 0);
+                        remoteViews.setImageViewBitmap(R.id.imageViewDia2, imagem);
+                        imagem = null;
                     }
 
                 } else {
                     if ((Second % 2) == 0) {
                         if (estadoAlarme == 0) {
-                            remoteViews.setImageViewBitmap(R.id.imageViewClockH1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0));
-                            remoteViews.setImageViewBitmap(R.id.imageViewClockH2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0));
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
+                            imagem = null;
+
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewClockH2, imagem);
+                            imagem = null;
                         } else if (estadoAlarme == 1) {
                             // Minutos
-                            remoteViews.setImageViewBitmap(R.id.imageViewClockM1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0));
-                            remoteViews.setImageViewBitmap(R.id.imageViewClockM2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0));
-                        } else if (estadoAlarme == 2) {
-                            remoteViews.setImageViewBitmap(R.id.imageViewMes1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0));
-                            remoteViews.setImageViewBitmap(R.id.imageViewMes2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0));
-                        } else if (estadoAlarme == 3) {
-                            remoteViews.setImageViewBitmap(R.id.imageViewDia1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0));
-                            remoteViews.setImageViewBitmap(R.id.imageViewDia2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0));
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
+                            imagem = null;
 
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 28, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewClockM2, imagem);
+                            imagem = null;
+                        } else if (estadoAlarme == 2) {
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
+                            imagem = null;
+
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewMes2, imagem);
+                            imagem = null;
+                        } else if (estadoAlarme == 3) {
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewDia1, imagem);
+                            imagem = null;
+
+                            imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
+                            remoteViews.setImageViewBitmap(R.id.imageViewDia2, imagem);
+                            imagem = null;
                         }
                     }
                 }
 
                 // Segundos
-                remoteViews.setImageViewBitmap(R.id.imageViewSec1, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
-                remoteViews.setImageViewBitmap(R.id.imageViewSec2, gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0));
+                imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
+                remoteViews.setImageViewBitmap(R.id.imageViewSec1, imagem);
+                imagem = null;
 
+                imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
+                remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
+                imagem = null;
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Constroe a tela de double time
@@ -873,7 +1019,6 @@ public class gshockAppWidget extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.buttonMode, pendingIntentMode);
 
 
-
             ///////////////////////////////////////////////////////////////////////////////////////////
             //
             // Verifica se as imagens estao atualizadas
@@ -900,13 +1045,10 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(thiswidget, remoteViews);
 
-            //Log.i("LEO", "Update Screen");
-
-
-            /*Intent it = new Intent(context, Alarm.class);
-            PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            alarmManager.setExact(AlarmManager.RTC, System.currentTimeMillis() + 500, pi);*/
+            thiswidget = null;
+            remoteViews = null;
+            prefs = null;
+            imagem = null;
         }
     }
 }
