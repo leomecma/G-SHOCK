@@ -16,6 +16,7 @@ public class ScreenON extends BroadcastReceiver{
         if(gshockAppWidget.SCREEN_ON.equals(intent.getAction())){
             Log.i("LEO","Screen ON");
             gshockAppWidget.clearApplicationData(context);
+            System.gc();
         }
     }
 }

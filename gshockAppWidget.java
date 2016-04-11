@@ -439,6 +439,7 @@ public class gshockAppWidget extends AppWidgetProvider {
         else if (USER_PRESENT.equals(intent.getAction())){
             Log.i("LEO","User present");
             clearApplicationData(context);
+            System.gc();
         }
 
         manager.updateAppWidget(thiswidget, views);
@@ -446,7 +447,6 @@ public class gshockAppWidget extends AppWidgetProvider {
         int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
         updateScreen(context,manager,appWidgetIds);
     }
-
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -900,7 +900,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(thiswidget, remoteViews);
 
-            Log.i("LEO", "Update Screen");
+            //Log.i("LEO", "Update Screen");
 
 
             /*Intent it = new Intent(context, Alarm.class);
