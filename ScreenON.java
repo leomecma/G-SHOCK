@@ -22,6 +22,18 @@ public class ScreenON extends BroadcastReceiver{
             gshockAppWidget.oldDay=-1;
             gshockAppWidget.oldWeekDay="ER";
             gshockAppWidget.oldHour=-1;
+            gshockAppWidget.oldSecond=-1;
+
+            gshockAppWidget.oldFuncStr="ER";
+            gshockAppWidget.oldChronoMinute=-1;
+            gshockAppWidget.oldChronoHour=-1;
+            gshockAppWidget.oldChronoSecond=-1;
+
+            gshockAppWidget.oldAlHour=-1;
+            gshockAppWidget.oldAlMinute=-1;
+            gshockAppWidget.oldAlMonth=-1;
+            gshockAppWidget.oldAlDay=-1;
+
 
             Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
