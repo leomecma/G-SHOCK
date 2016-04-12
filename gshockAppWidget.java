@@ -106,6 +106,7 @@ public class gshockAppWidget extends AppWidgetProvider {
     public static long oldAlMonth=-1;
     public static long oldAlDay=-1;
 
+    public static long chronoBase;
 
     static public void clearApplicationData(Context context)
     {
@@ -311,9 +312,17 @@ public class gshockAppWidget extends AppWidgetProvider {
             }
             else if (TelaAtual == 2){
                 lastPause=0;
+                chronoBase=0;
+                editor.putLong("lastPause", lastPause);
+                editor.putLong("chronoBase", chronoBase);
+                editor.commit();
+
                 if (mChronometer!=null) {
                     mChronometer.stop();
                     mChronometer=null;
+
+                    editor.putBoolean("startChrono", false);
+                    editor.commit();
                 }
             }
         }
@@ -485,25 +494,36 @@ public class gshockAppWidget extends AppWidgetProvider {
                         startChrono=false;
                         if (mChronometer!=null) {
                             lastPause = SystemClock.elapsedRealtime();
+                            editor.putLong("lastPause", lastPause);
                             mChronometer.stop();
                             //mChronometer = null;
+                            editor.putLong("lastPause", lastPause);
+
                         }
                         editor.putBoolean("startChrono", startChrono);
                         editor.commit();
                     }
                     else{
 
-                        Log.i("LEO","Start");
+                        Log.i("LEO", "Start");
 
                         if (mChronometer==null)
                             mChronometer = new Chronometer(context);
                         startChrono=true;
 
-                        if (lastPause!=0)
-                            mChronometer.setBase(mChronometer.getBase() + SystemClock.elapsedRealtime() - lastPause);
-                        else
-                            mChronometer.setBase(SystemClock.elapsedRealtime());
+                        if (lastPause!=0) {
+                            chronoBase = mChronometer.getBase() + SystemClock.elapsedRealtime() - lastPause;
+                            mChronometer.setBase(chronoBase);
+                        }
+                        else {
+                            chronoBase = SystemClock.elapsedRealtime();
+                            mChronometer.setBase(chronoBase);
+                        }
                         mChronometer.start();
+
+                        editor.putBoolean("startChrono", startChrono);
+                        editor.putLong("chronoBase", chronoBase);
+                        editor.commit();
                     }
                 }
 
@@ -554,6 +574,8 @@ public class gshockAppWidget extends AppWidgetProvider {
             // Le dados persistentes
 
             SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
             light = prefs.getBoolean("light", false);
             sample = prefs.getBoolean("sample", false);
             TelaAtual = prefs.getInt("TelaAtual", 0);
@@ -1096,14 +1118,30 @@ public class gshockAppWidget extends AppWidgetProvider {
                 long elapsedMillis=0;
                 long tmp;
 
+                lastPause = prefs.getLong("lastPause",SystemClock.elapsedRealtime());
+                chronoBase = prefs.getLong("chronoBase",SystemClock.elapsedRealtime());
+                startChrono = prefs.getBoolean("startChrono", false);
+
                 if (mChronometer!=null) {
                     if (startChrono)
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
-                    else
+                    else {
                         elapsedMillis = lastPause - mChronometer.getBase();
+                    }
                 }
                 else{
-                    elapsedMillis = 0;
+                    if (startChrono) {
+
+                        if (chronoBase==0) {
+                            chronoBase = SystemClock.elapsedRealtime();
+                            editor.putLong("chronoBase",chronoBase);
+                        }
+                        mChronometer = new Chronometer(context);
+                        mChronometer.setBase(chronoBase);
+                        mChronometer.start();
+                    }
+                    else
+                        elapsedMillis = 0;
                 }
 
                 //Log.i("LEO", "Entrou no amostra");
