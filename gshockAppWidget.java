@@ -1118,6 +1118,9 @@ public class gshockAppWidget extends AppWidgetProvider {
                 long elapsedMillis=0;
                 long tmp;
 
+                long hr;
+                long min;
+
                 lastPause = prefs.getLong("lastPause",SystemClock.elapsedRealtime());
                 chronoBase = prefs.getLong("chronoBase",SystemClock.elapsedRealtime());
                 startChrono = prefs.getBoolean("startChrono", false);
@@ -1178,6 +1181,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                 tmp = elapsedMillis/3600000;
                 if (tmp > 99) mChronometer.setBase(SystemClock.elapsedRealtime());
 
+                hr = tmp;
                 if (oldChronoHour!=tmp) {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%d H", tmp), Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewTraco, imagem);
@@ -1188,7 +1192,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                 ////////////////////////////////////////////////////////////////////////////////////
 
                 //Minutos
-                tmp = (elapsedMillis/60000) - (tmp/60);
+                tmp = (elapsedMillis/60000) - (hr*60);
+                min = tmp;
                 if (oldChronoMinute!=tmp) {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%01d", tmp / 10), Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
@@ -1208,7 +1213,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
 
                 // Segundos
-                tmp = (elapsedMillis/1000)-(tmp*60);
+                tmp = (elapsedMillis/1000)-(min*60 + hr*3600);
                 if (oldChronoSecond!=tmp) {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%01d", tmp / 10), Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
