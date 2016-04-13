@@ -93,7 +93,7 @@ public class gshockAppWidget extends AppWidgetProvider {
     public static String oldWeekDay="ER";
 
     private static Chronometer mChronometer = null;
-    private static boolean startChrono=false;
+    private static int  startChrono=0;
     private static long lastPause=0;
 
     public static String oldFuncStr="ER";
@@ -320,9 +320,11 @@ public class gshockAppWidget extends AppWidgetProvider {
                     mChronometer.stop();
                     mChronometer=null;
 
-                    editor.putBoolean("startChrono", false);
+                    editor.putInt("startChrono", 0);
                 }
                 editor.commit();
+
+                Log.i("LEO", "Stop");
             }
         }
 
@@ -486,20 +488,18 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
                 else if (TelaAtual == 2) {
 
-                    if (startChrono){
+                    if (startChrono==1){
 
-                        Log.i("LEO","Stop");
+                        Log.i("LEO","Pause");
 
-                        startChrono=false;
+                        startChrono=2;
                         if (mChronometer!=null) {
-                            lastPause = SystemClock.elapsedRealtime();
-                            editor.putLong("lastPause", lastPause);
-                            mChronometer.stop();
-                            //mChronometer = null;
-                            editor.putLong("lastPause", lastPause);
 
+                            mChronometer.stop();
                         }
-                        editor.putBoolean("startChrono", startChrono);
+                        lastPause = SystemClock.elapsedRealtime();
+                        editor.putLong("lastPause", lastPause);
+                        editor.putInt("startChrono", startChrono);
                     }
                     else{
 
@@ -507,7 +507,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                         if (mChronometer==null)
                             mChronometer = new Chronometer(context);
-                        startChrono=true;
+                        startChrono=1;
 
                         if (lastPause!=0) {
                             chronoBase = mChronometer.getBase() + SystemClock.elapsedRealtime() - lastPause;
@@ -519,7 +519,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                         }
                         mChronometer.start();
 
-                        editor.putBoolean("startChrono", startChrono);
+                        editor.putInt("startChrono", startChrono);
                         editor.putLong("chronoBase", chronoBase);
                     }
                     editor.commit();
@@ -1121,20 +1121,20 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 lastPause = prefs.getLong("lastPause",SystemClock.elapsedRealtime());
                 chronoBase = prefs.getLong("chronoBase",SystemClock.elapsedRealtime());
-                startChrono = prefs.getBoolean("startChrono", false);
+                startChrono = prefs.getInt("startChrono", 0);
 
                 if (mChronometer!=null) {
-                    if (startChrono) {
+                    if (startChrono==1) {
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
                         remoteViews.setTextViewText(R.id.textView, "A");
                     }
-                    else {
+                    else if (startChrono==2){
                         elapsedMillis = lastPause - mChronometer.getBase();
                         remoteViews.setTextViewText(R.id.textView, "B");
                     }
                 }
                 else{
-                    if (startChrono) {
+                    if (startChrono>0) {
                         if (chronoBase==0) {
                             chronoBase = SystemClock.elapsedRealtime();
                             editor.putLong("chronoBase",chronoBase);
