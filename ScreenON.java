@@ -40,8 +40,8 @@ public class ScreenON extends BroadcastReceiver{
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(pi);
 
-            gshockAppWidget.clearApplicationData(context);
-            System.gc();
+            //gshockAppWidget.clearApplicationData(context);
+            //System.gc();
 
             am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
         }

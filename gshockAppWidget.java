@@ -315,15 +315,14 @@ public class gshockAppWidget extends AppWidgetProvider {
                 chronoBase=0;
                 editor.putLong("lastPause", lastPause);
                 editor.putLong("chronoBase", chronoBase);
-                editor.commit();
 
                 if (mChronometer!=null) {
                     mChronometer.stop();
                     mChronometer=null;
 
                     editor.putBoolean("startChrono", false);
-                    editor.commit();
                 }
+                editor.commit();
             }
         }
 
@@ -501,7 +500,6 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                         }
                         editor.putBoolean("startChrono", startChrono);
-                        editor.commit();
                     }
                     else{
 
@@ -523,8 +521,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                         editor.putBoolean("startChrono", startChrono);
                         editor.putLong("chronoBase", chronoBase);
-                        editor.commit();
                     }
+                    editor.commit();
                 }
 
             }
@@ -537,8 +535,8 @@ public class gshockAppWidget extends AppWidgetProvider {
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(pi);
 
-            clearApplicationData(context);
-            System.gc();
+            //clearApplicationData(context);
+            //System.gc();
 
             am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
         }
@@ -1126,25 +1124,32 @@ public class gshockAppWidget extends AppWidgetProvider {
                 startChrono = prefs.getBoolean("startChrono", false);
 
                 if (mChronometer!=null) {
-                    if (startChrono)
+                    if (startChrono) {
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
+                        remoteViews.setTextViewText(R.id.textView, "A");
+                    }
                     else {
                         elapsedMillis = lastPause - mChronometer.getBase();
+                        remoteViews.setTextViewText(R.id.textView, "B");
                     }
                 }
                 else{
                     if (startChrono) {
-
                         if (chronoBase==0) {
                             chronoBase = SystemClock.elapsedRealtime();
                             editor.putLong("chronoBase",chronoBase);
+                            editor.commit();
                         }
                         mChronometer = new Chronometer(context);
                         mChronometer.setBase(chronoBase);
                         mChronometer.start();
+                        elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
+                        remoteViews.setTextViewText(R.id.textView, "C");
                     }
-                    else
+                    else {
                         elapsedMillis = 0;
+                        remoteViews.setTextViewText(R.id.textView, "D");
+                    }
                 }
 
                 //Log.i("LEO", "Entrou no amostra");
@@ -1268,12 +1273,12 @@ public class gshockAppWidget extends AppWidgetProvider {
             }
 
             // Inicia imagem dos alarmes
-            if (estadoBip == 0) { // Ambos ligados
-                remoteViews.setViewVisibility(R.id.imageViewBip1, View.VISIBLE);
-                remoteViews.setViewVisibility(R.id.imageViewBip2, View.VISIBLE);
-            } else if (estadoBip == 1) { // Ambos desligados
+            if ((estadoBip == 1)||(TelaAtual==2)) { // Ambos ligados
                 remoteViews.setViewVisibility(R.id.imageViewBip1, View.INVISIBLE);
                 remoteViews.setViewVisibility(R.id.imageViewBip2, View.INVISIBLE);
+            } else if (estadoBip == 0) { // Ambos desligados
+                remoteViews.setViewVisibility(R.id.imageViewBip1, View.VISIBLE);
+                remoteViews.setViewVisibility(R.id.imageViewBip2, View.VISIBLE);
             } else if (estadoBip == 2) { // Apenas bip1 ligado
                 remoteViews.setViewVisibility(R.id.imageViewBip1, View.VISIBLE);
                 remoteViews.setViewVisibility(R.id.imageViewBip2, View.INVISIBLE);
