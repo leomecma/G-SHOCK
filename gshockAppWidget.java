@@ -860,7 +860,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                     remoteViews.setViewVisibility(R.id.imageViewAMPM, View.VISIBLE);
                     remoteViews.setViewVisibility(R.id.imageView24H, View.INVISIBLE);
 
-                    if ((AlPM) || (Al24H) && ((AlHour > 12) || AlHour == 0)) {
+                    if ((AlPM) || (Al24H) && ((AlHour > 12) /*|| AlHour == 0*/)) {
                         imagem = gshockAppWidget.getFontBitmap(context, "PM", Color.BLACK, 6, 1);
                         remoteViews.setImageViewBitmap(R.id.imageViewAMPM, imagem);
                         imagem = null;
