@@ -16,6 +16,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.SystemClock;
@@ -24,6 +26,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Chronometer;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
 
 import java.io.File;
@@ -324,7 +327,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
                 editor.commit();
 
-                Log.i("LEO", "Stop");
+                //Log.i("LEO", "Stop");
             }
         }
 
@@ -490,7 +493,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                     if (startChrono==1){
 
-                        Log.i("LEO","Pause");
+                        //Log.i("LEO","Pause");
 
                         startChrono=2;
                         if (mChronometer!=null) {
@@ -503,7 +506,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
                     else{
 
-                        Log.i("LEO", "Start");
+                        //Log.i("LEO", "Start");
 
                         if (mChronometer==null)
                             mChronometer = new Chronometer(context);
@@ -528,7 +531,7 @@ public class gshockAppWidget extends AppWidgetProvider {
             }
         }
         else if (USER_PRESENT.equals(intent.getAction())){
-            Log.i("LEO","User present");
+            //Log.i("LEO","User present");
 
             Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
@@ -1126,11 +1129,11 @@ public class gshockAppWidget extends AppWidgetProvider {
                 if (mChronometer!=null) {
                     if (startChrono==1) {
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
-                        remoteViews.setTextViewText(R.id.textView, "A");
+                        //remoteViews.setTextViewText(R.id.textView, "A");
                     }
                     else if (startChrono==2){
                         elapsedMillis = lastPause - mChronometer.getBase();
-                        remoteViews.setTextViewText(R.id.textView, "B");
+                        //remoteViews.setTextViewText(R.id.textView, "B");
                     }
                 }
                 else{
@@ -1144,11 +1147,11 @@ public class gshockAppWidget extends AppWidgetProvider {
                         mChronometer.setBase(chronoBase);
                         mChronometer.start();
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
-                        remoteViews.setTextViewText(R.id.textView, "C");
+                        //remoteViews.setTextViewText(R.id.textView, "C");
                     }
                     else {
                         elapsedMillis = 0;
-                        remoteViews.setTextViewText(R.id.textView, "D");
+                        //remoteViews.setTextViewText(R.id.textView, "D");
                     }
                 }
 
