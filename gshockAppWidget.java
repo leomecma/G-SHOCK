@@ -696,7 +696,7 @@ public class gshockAppWidget extends AppWidgetProvider {
                         startBip=false;
                     }
                 }
-            }
+            } 
 
             // REM
             imagem = gshockAppWidget.getFontBitmap(context, "REM", Color.BLACK, 4, 1);
