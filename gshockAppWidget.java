@@ -1,7 +1,9 @@
 package com.mecma.g_shock;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.app.ApplicationErrorReport;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -31,56 +33,58 @@ import android.widget.RemoteViews;
 
 import java.io.File;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Timer;
 
 
 /**
  * Implementation of App Widget functionality.
  */
 public class gshockAppWidget extends AppWidgetProvider {
-    private static int co=0;
+    private static int co = 0;
 
-    private static int numTelas=3;
+    private static int numTelas = 3;
 
-    private static boolean adjustClicked=false;
+    private static boolean adjustClicked = false;
 
     // Aramezanamento interno permanente
-    private static boolean light=false;
-    private static boolean sample=false;
+    private static boolean light = false;
+    private static boolean sample = false;
     private static int TelaAtual = 0;
     private static int estadoBip = 0;
-    private static int AlMonth=0;
-    private static int Alday=0;
-    private static int AlHour=12;
-    private static int AlMin=0;
-    private static boolean AlPM=false;
-    private static boolean Al24H=false;
+    private static int AlMonth = 0;
+    private static int Alday = 0;
+    private static int AlHour = 12;
+    private static int AlMin = 0;
+    private static boolean AlPM = false;
+    private static boolean Al24H = false;
 
-    public static int estadoAlarme=0;
+    public static int estadoAlarme = 0;
 
-    public static String BUTTON_LIGHT   = "android.appwidget.action.buttonLight";
-    public static String BUTTON_REM     = "android.appwidget.action.buttonRem";
-    public static String BUTTON_ADJUST  = "android.appwidget.action.buttonAdjust";
-    public static String BUTTON_MODE    = "android.appwidget.action.buttonMode";
-    public static String USER_PRESENT   = "android.intent.action.USER_PRESENT";
-    public static String SCREEN_ON      = "android.intent.action.SCREEN_ON";
+    public static String BUTTON_LIGHT = "android.appwidget.action.buttonLight";
+    public static String BUTTON_REM = "android.appwidget.action.buttonRem";
+    public static String BUTTON_ADJUST = "android.appwidget.action.buttonAdjust";
+    public static String BUTTON_MODE = "android.appwidget.action.buttonMode";
+    public static String USER_PRESENT = "android.intent.action.USER_PRESENT";
+    public static String SCREEN_ON = "android.intent.action.SCREEN_ON";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static boolean isPM=false;
-    private static boolean is24H=false;
+    private static boolean isPM = false;
+    private static boolean is24H = false;
 
-    private static int coBip=0;
-    private static boolean startBip=false;
+    private static int coBip = 0;
+    private static boolean startBip = false;
 
-    private static Intent intentRem                    = null;
-    private static Intent intentAdjust                 = null;
-    private static Intent intentMode                   = null;
-    private static Intent intentLight                  = null;
-    private static PendingIntent pendingIntentRem      = null;
-    private static PendingIntent pendingIntentAdjust   = null;
-    private static PendingIntent pendingIntentMode     = null;
-    private static PendingIntent pendingIntentLight    = null;
+    private static Intent intentRem = null;
+    private static Intent intentAdjust = null;
+    private static Intent intentMode = null;
+    private static Intent intentLight = null;
+    private static PendingIntent pendingIntentRem = null;
+    private static PendingIntent pendingIntentAdjust = null;
+    private static PendingIntent pendingIntentMode = null;
+    private static PendingIntent pendingIntentLight = null;
 
     private static int Hour;
     private static int Minute;
@@ -88,28 +92,31 @@ public class gshockAppWidget extends AppWidgetProvider {
     private static int Day;
     private static int Month;
 
-    public static int oldHour=-1;
-    public static int oldMinute=-1;
-    public static int oldSecond=-1;
-    public static int oldDay=-1;
-    public static int oldMonth=-1;
-    public static String oldWeekDay="ER";
+    public static int oldHour = -1;
+    public static int oldMinute = -1;
+    public static int oldSecond = -1;
+    public static int oldDay = -1;
+    public static int oldMonth = -1;
+    public static String oldWeekDay = "ER";
+    public static int oldBip=-1;
 
     private static Chronometer mChronometer = null;
-    private static int  startChrono=0;
-    private static long lastPause=0;
+    private static int startChrono = 0;
+    private static long lastPause = 0;
 
-    public static String oldFuncStr="ER";
-    public static long oldChronoMinute=-1;
-    public static long oldChronoHour=-1;
-    public static long oldChronoSecond=-1;
+    public static String oldFuncStr = "ER";
+    public static long oldChronoMinute = -1;
+    public static long oldChronoHour = -1;
+    public static long oldChronoSecond = -1;
 
-    public static long oldAlHour=-1;
-    public static long oldAlMinute=-1;
-    public static long oldAlMonth=-1;
-    public static long oldAlDay=-1;
+    public static long oldAlHour = -1;
+    public static long oldAlMinute = -1;
+    public static long oldAlMonth = -1;
+    public static long oldAlDay = -1;
 
     public static long chronoBase;
+
+    private static int error = 250;
 
     static public void clearApplicationData(Context context)
     {
@@ -161,35 +168,15 @@ public class gshockAppWidget extends AppWidgetProvider {
         am.cancel(pi);
         am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
 
+        //Limpa as variaveis de cronometro
 
-        /*Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while(true) {
-                        sleep(5000);
-                        Log.i("LEO","Rodando");
-                        if (oldSecond != Second){
-                            Log.i("LEO","Passou");
-                           RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.gshock_app_widget);
-                            ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
-                            AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        SharedPreferences prefs = context.getSharedPreferences("persistent", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
 
-                            manager.updateAppWidget(thiswidget, views);
-
-                            int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
-                            updateScreen(context,manager,appWidgetIds);
-                            oldSecond = Second;
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    while(true) Log.i("LEO","Erro thread");
-                }
-            }
-        };
-
-        thread.start();*/
+        editor.putLong("lastPause", 0);
+        editor.putLong("chronoBase", 0);
+        editor.putInt("startChrono", 0);
+        editor.commit();
     }
 
     @Override
@@ -531,15 +518,13 @@ public class gshockAppWidget extends AppWidgetProvider {
             }
         }
         else if (USER_PRESENT.equals(intent.getAction())){
-            //Log.i("LEO","User present");
+
+            clearApplicationData(context);
 
             Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(pi);
-
-            //clearApplicationData(context);
-            //System.gc();
 
             am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
         }
@@ -563,10 +548,38 @@ public class gshockAppWidget extends AppWidgetProvider {
     static void updateScreen (Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds){
 
         Bitmap imagem;
+
         ComponentName thiswidget = new ComponentName(context, gshockAppWidget.class);
         //You can do the processing here update the widget/remote views.
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                 R.layout.gshock_app_widget);
+
+        // Verifica se as variaveis estao se perdendo
+
+        if (error != 250){
+            //remoteViews.setTextViewText(R.id.textView, "Erro");
+            //timer = new Timer();
+            error = 250;
+            oldMinute=-1;
+            oldMonth=-1;
+            oldDay=-1;
+            oldWeekDay="ER";
+            oldHour=-1;
+            oldSecond=-1;
+
+            oldFuncStr="ER";
+            oldChronoMinute=-1;
+            oldChronoHour=-1;
+            oldChronoSecond=-1;
+
+            oldAlHour=-1;
+            oldAlMinute=-1;
+            oldAlMonth=-1;
+            oldAlDay=-1;
+            //Log.i("LEO","Perdeu");
+        }
+        //else
+        //    remoteViews.setTextViewText(R.id.textView, "OK");
 
         appWidgetIds = appWidgetManager.getAppWidgetIds(thiswidget);
 
@@ -656,34 +669,32 @@ public class gshockAppWidget extends AppWidgetProvider {
                 }
 
                 // Nesse caso só vai bpar nos dias preestabelecidos
-                if ((Alday != 0) || (AlMonth != 0)) {
-                    if (((Month == AlMonth) || (AlMonth == 0)) && ((Day == Alday) || (Alday == 0))) {
+                if (!startBip)
+                {
+                    if ((Alday != 0) || (AlMonth != 0)) {
+                        if (((Month == AlMonth) || (AlMonth == 0)) && ((Day == Alday) || (Alday == 0))) {
+                            if (((Hour == localAlHour) && ((Al24H) ? true : (isPM && AlPM))) && (Minute == AlMin)) {
+                                startBip = true;
+                            }
+                        }
+                    } else {
                         if (((Hour == localAlHour) && ((Al24H) ? true : (isPM && AlPM))) && (Minute == AlMin)) {
                             startBip = true;
                         }
                     }
-                } else {
-                    if (((Hour == localAlHour) && ((Al24H) ? true : (isPM && AlPM))) && (Minute == AlMin)) {
-                        startBip = true;
-                    }
                 }
 
-                if (startBip) {
-
-                    if (coBip == 0) {
-
-                    }
-                    if (coBip < 40) {
-                        if ((coBip%2)==0) {
+                if (startBip){
+                    if (Second<20) {
+                        if (oldBip!=Second) {
                             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
                             mp.start();
+                            oldBip=Second;
                         }
-                    } else if (coBip > 100) {
-                        startBip = false;
                     }
-                    coBip++;
-                } else {
-                    coBip = 0;
+                    else{
+                        startBip=false;
+                    }
                 }
             }
 

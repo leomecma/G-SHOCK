@@ -35,13 +35,13 @@ public class ScreenON extends BroadcastReceiver{
             gshockAppWidget.oldAlDay=-1;
 
 
+            gshockAppWidget.clearApplicationData(context);
+
             Intent it = new Intent(context, Alarm.class);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, it, 0);
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(pi);
 
-            //gshockAppWidget.clearApplicationData(context);
-            //System.gc();
 
             am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 500, 500, pi);
         }
