@@ -686,17 +686,16 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 if (startBip){
                     if (Second<20) {
-                        if (oldBip!=Second) {
+                        if (oldSecond!=Second) {
                             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
                             mp.start();
-                            oldBip=Second;
                         }
                     }
                     else{
                         startBip=false;
                     }
                 }
-            } 
+            }
 
             // REM
             imagem = gshockAppWidget.getFontBitmap(context, "REM", Color.BLACK, 4, 1);
@@ -728,7 +727,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 //////////////////////////////////////////////////////////////////////////////////////////
                 // Horas
-                if (oldHour!=Hour) {
+                if (oldHour!=Hour)
+                 {
                     imagem = gshockAppWidget.getFontBitmap(context, Hour / 10 == 0 ? "" : String.format("%d", Hour / 10), Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
                     imagem = null;
@@ -748,7 +748,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 /////////////////////////////////////////////////////////////////////////////////////////
                 // Minutos
-                if(oldMinute!=Minute) {
+                if(oldMinute!=Minute)
+                {
                     // Dois pontos
                     imagem = gshockAppWidget.getFontBitmap(context, ":", Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClock2P, imagem);
@@ -769,7 +770,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 // Segundos
-                if (oldSecond!=Second) {
+                if (oldSecond!=Second)
+                {
                     if (!sample) {
                         imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", Second / 10), Color.BLACK, 20, 0);
                         remoteViews.setImageViewBitmap(R.id.imageViewSec1, imagem);
@@ -787,12 +789,14 @@ public class gshockAppWidget extends AppWidgetProvider {
                         remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
                         imagem = null;
                     }
+                    oldSecond=Second;
                 }
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 /////////////////////////////////////////////////////////////////////////////////////
                 // Data
-                if (oldMonth!=Month) {
+                if (oldMonth!=Month)
+                {
                     //Mes
                     imagem = gshockAppWidget.getFontBitmap(context, Month / 10 == 0 ? "" : String.format("%d", Month / 10), Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
@@ -808,7 +812,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 //////////////////////////////////////////////////////////////////////////////////////
                 //Dia
-                if (oldDay!=Day) {
+                if (oldDay!=Day)
+                {
                     //Traco
                     imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewTraco, imagem);
@@ -829,7 +834,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                 ///////////////////////////////////////////////////////////////////////////////////////
                 // Dia da semana
                 String str = Utility.getDayOfWeek();
-                if(!oldWeekDay.equals(str)) {
+                if(!oldWeekDay.equals(str))
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, str, Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, imagem);
                     imagem = null;
@@ -846,7 +852,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                 int localHour = AlHour;
 
                 // AL
-                if (!oldFuncStr.equals("AL")) {
+                if (!oldFuncStr.equals("AL"))
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, "AL", Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, imagem);
                     imagem = null;
@@ -858,7 +865,6 @@ public class gshockAppWidget extends AppWidgetProvider {
                     imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
                     imagem = null;
-
 
                     oldFuncStr = "AL";
                 }
@@ -909,7 +915,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
 
                     // Horas
-                    if(oldAlHour!=localHour) {
+                    if(oldAlHour!=localHour)
+                    {
                         imagem = gshockAppWidget.getFontBitmap(context, localHour / 10 == 0 ? "" : String.format("%d", localHour / 10), Color.BLACK, 28, 0);
                         remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
                         imagem = null;
@@ -927,7 +934,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
 
                     // Minutos
-                    if (oldAlMinute!=AlMin) {
+                    if (oldAlMinute!=AlMin)
+                    {
                         imagem = gshockAppWidget.getFontBitmap(context, String.format("%d", AlMin / 10), Color.BLACK, 28, 0);
                         remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
                         imagem = null;
@@ -942,7 +950,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                     // Data
                     //Mes
-                    if(oldAlMonth!=AlMonth) {
+                    if(oldAlMonth!=AlMonth)
+                    {
                         if (AlMonth == 0) {
                             imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 18, 0);
                             remoteViews.setImageViewBitmap(R.id.imageViewMes1, imagem);
@@ -969,7 +978,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
 
                     //Dia
-                    if (oldAlDay!=Alday) {
+                    if (oldAlDay!=Alday)
+                    {
                         if (Alday == 0) {
                             imagem = gshockAppWidget.getFontBitmap(context, "-", Color.BLACK, 18, 0);
                             remoteViews.setImageViewBitmap(R.id.imageViewDia1, imagem);
@@ -1037,15 +1047,6 @@ public class gshockAppWidget extends AppWidgetProvider {
                         }
                     }
                 }
-
-                // Segundos
-                /*imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
-                remoteViews.setImageViewBitmap(R.id.imageViewSec1, imagem);
-                imagem = null;
-
-                imagem = gshockAppWidget.getFontBitmap(context, "", Color.BLACK, 20, 0);
-                remoteViews.setImageViewBitmap(R.id.imageViewSec2, imagem);
-                imagem = null;*/
 
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1140,11 +1141,9 @@ public class gshockAppWidget extends AppWidgetProvider {
                 if (mChronometer!=null) {
                     if (startChrono==1) {
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
-                        //remoteViews.setTextViewText(R.id.textView, "A");
                     }
                     else if (startChrono==2){
                         elapsedMillis = lastPause - mChronometer.getBase();
-                        //remoteViews.setTextViewText(R.id.textView, "B");
                     }
                 }
                 else{
@@ -1158,18 +1157,15 @@ public class gshockAppWidget extends AppWidgetProvider {
                         mChronometer.setBase(chronoBase);
                         mChronometer.start();
                         elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();
-                        //remoteViews.setTextViewText(R.id.textView, "C");
                     }
                     else {
                         elapsedMillis = 0;
-                        //remoteViews.setTextViewText(R.id.textView, "D");
                     }
                 }
 
-                //Log.i("LEO", "Entrou no amostra");
-
                 // ST
-                if (!oldFuncStr.equals("ST")) {
+                if (!oldFuncStr.equals("ST"))
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, "ST", Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewWeekDay, imagem);
                     imagem = null;
@@ -1201,7 +1197,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                 if (tmp > 99) mChronometer.setBase(SystemClock.elapsedRealtime());
 
                 hr = tmp;
-                if (oldChronoHour!=tmp) {
+                if (oldChronoHour!=tmp)
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%d H", tmp), Color.BLACK, 18, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewTraco, imagem);
                     imagem = null;
@@ -1213,7 +1210,8 @@ public class gshockAppWidget extends AppWidgetProvider {
                 //Minutos
                 tmp = (elapsedMillis/60000) - (hr*60);
                 min = tmp;
-                if (oldChronoMinute!=tmp) {
+                if (oldChronoMinute!=tmp)
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%01d", tmp / 10), Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClockH1, imagem);
                     imagem = null;
@@ -1233,7 +1231,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 // Segundos
                 tmp = (elapsedMillis/1000)-(min*60 + hr*3600);
-                if (oldChronoSecond!=tmp) {
+                if (oldChronoSecond!=tmp)
+                {
                     imagem = gshockAppWidget.getFontBitmap(context, String.format("%01d", tmp / 10), Color.BLACK, 28, 0);
                     remoteViews.setImageViewBitmap(R.id.imageViewClockM1, imagem);
                     imagem = null;
