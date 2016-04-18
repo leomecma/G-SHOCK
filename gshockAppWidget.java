@@ -118,6 +118,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
     private static int error = 250;
 
+    private static int secChanged=-1;
+
     static public void clearApplicationData(Context context)
     {
         File cache = context.getCacheDir();
@@ -316,6 +318,8 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 //Log.i("LEO", "Stop");
             }
+
+            views.setViewVisibility(R.id.buttonLight, View.INVISIBLE);
         }
 
         else if (BUTTON_MODE.equals(intent.getAction())) {
@@ -354,6 +358,7 @@ public class gshockAppWidget extends AppWidgetProvider {
 
                 }
             }
+            views.setViewVisibility(R.id.buttonMode, View.INVISIBLE);
         }
 
         else if (BUTTON_ADJUST.equals(intent.getAction())) {
@@ -384,6 +389,7 @@ public class gshockAppWidget extends AppWidgetProvider {
             editor.putBoolean("adjustClicked", adjustClicked);
             editor.commit();
 
+            views.setViewVisibility(R.id.buttonAdjust, View.INVISIBLE);
         }
         else if (BUTTON_REM.equals(intent.getAction())) {
             final MediaPlayer mp = MediaPlayer.create(context, R.raw.beepgshock);
@@ -514,8 +520,9 @@ public class gshockAppWidget extends AppWidgetProvider {
                     }
                     editor.commit();
                 }
-
             }
+
+            views.setViewVisibility(R.id.buttonRem, View.INVISIBLE);
         }
         else if (USER_PRESENT.equals(intent.getAction())){
 
@@ -536,9 +543,6 @@ public class gshockAppWidget extends AppWidgetProvider {
         prefs = null;
         editor = null;
         manager = null;
-
-        //int[] appWidgetIds = manager.getAppWidgetIds(thiswidget);
-        //updateScreen(context,manager,appWidgetIds);
     }
 
 
@@ -557,8 +561,6 @@ public class gshockAppWidget extends AppWidgetProvider {
         // Verifica se as variaveis estao se perdendo
 
         if (error != 250){
-            //remoteViews.setTextViewText(R.id.textView, "Erro");
-            //timer = new Timer();
             error = 250;
             oldMinute=-1;
             oldMonth=-1;
@@ -578,8 +580,6 @@ public class gshockAppWidget extends AppWidgetProvider {
             oldAlDay=-1;
             //Log.i("LEO","Perdeu");
         }
-        //else
-        //    remoteViews.setTextViewText(R.id.textView, "OK");
 
         appWidgetIds = appWidgetManager.getAppWidgetIds(thiswidget);
 
@@ -1300,12 +1300,24 @@ public class gshockAppWidget extends AppWidgetProvider {
                 remoteViews.setViewVisibility(R.id.imageViewBip2, View.VISIBLE);
             }
 
+            if(secChanged!=Second){
+                secChanged=Second;
+                remoteViews.setViewVisibility(R.id.buttonRem, View.VISIBLE);
+                remoteViews.setViewVisibility(R.id.buttonAdjust, View.VISIBLE);
+                remoteViews.setViewVisibility(R.id.buttonLight, View.VISIBLE);
+                remoteViews.setViewVisibility(R.id.buttonMode, View.VISIBLE);
+                //Log.i("LEO","PASS");
+            }
+
             appWidgetManager.updateAppWidget(thiswidget, remoteViews);
+
 
             thiswidget = null;
             remoteViews = null;
             prefs = null;
             imagem = null;
+
+
         }
     }
 }
